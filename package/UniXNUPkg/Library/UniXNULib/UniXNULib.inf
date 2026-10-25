@@ -30,6 +30,7 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
   UniXNUPkg/UniXNUPkg.dec
 
 [LibraryClasses]

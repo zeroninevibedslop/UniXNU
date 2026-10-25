@@ -34,6 +34,7 @@
   UefiRuntimeServicesTableLib|MdePkg/Library/UefiRuntimeServicesTableLib/UefiRuntimeServicesTableLib.inf
   DebugPrintErrorLevelLib|MdePkg/Library/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib.inf
   UniXNULib|UniXNUPkg/Library/UniXNULib/UniXNULib.inf
+  NULL|ArmPkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
 
 !if $(TARGET) == RELEASE
   DebugLib|MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
@@ -48,6 +49,9 @@
 [PcdsFixedAtBuild]
   gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x80000000
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x07
+
+[BuildOptions]
+  GCC:*_*_AARCH64_CC_FLAGS = -fno-stack-protector
 
 [Components]
   UniXNUPkg/Application/UniXNU/UniXNU.inf

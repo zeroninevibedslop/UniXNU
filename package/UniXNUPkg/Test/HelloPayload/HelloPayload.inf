@@ -19,6 +19,7 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
   UniXNUPkg/UniXNUPkg.dec
   UniXNUPkg/Test/UniXNUTest.dec
 

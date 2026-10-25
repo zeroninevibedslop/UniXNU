@@ -2,31 +2,63 @@ diff --git a/iokit/Kernel/IOUserClient.cpp b/iokit/Kernel/IOUserClient.cpp
 index e7d6592..5d99754 100644
 --- a/iokit/Kernel/IOUserClient.cpp
 +++ b/iokit/Kernel/IOUserClient.cpp
-@@ -4325,6 +4325,23 @@ is_io_service_set_authorization_id(
+@@ -4325,6 +4325,49 @@ is_io_service_set_authorization_id(
  }
  
  /* Routine io_service_open_ndr */
 +/*
-+ * The native GPU driver names, by the property NativeSandboxGrantProcess on its accelerator service, the one process (the render server) to which it
-+ * grants its own user client in place of the sandbox's verdict: the original profiles name no class of that driver. Nothing else is affected.
++ * The native GPU driver names, by the property NativeSandboxGrantProcess on its accelerator service, the processes
++ * to which it grants its own user client in place of the sandbox's verdict: the original profiles name no class of that driver.
++ * Supports comma-separated process names, wildcard '*', and the boolean property NativeSandboxGrant.
 + */
 +extern "C" void proc_selfname(char * buf, int size);
 +static bool
 +native_sandbox_grant(IOService * service)
 +{
++	if (!service) {
++		return false;
++	}
++	if (service->getProperty("NativeSandboxGrant") == kOSBooleanTrue) {
++		return true;
++	}
 +	OSString * process = OSDynamicCast(OSString, service->getProperty("NativeSandboxGrantProcess"));
-+	char name[17] = {};
 +	if (!process) {
 +		return false;
 +	}
++	const char *list = process->getCStringNoCopy();
++	if (!list || !list[0]) {
++		return false;
++	}
++	if (strcmp(list, "*") == 0) {
++		return true;
++	}
++	char name[32] = {};
 +	proc_selfname(name, sizeof(name));
-+	return 0 == strncmp(name, process->getCStringNoCopy(), sizeof(name) - 1);
++	if (!name[0]) {
++		return false;
++	}
++	size_t namelen = strlen(name);
++	const char *p = list;
++	while (*p) {
++		while (*p == ',' || *p == ' ') p++;
++		if (!*p) break;
++		const char *end = strchr(p, ',');
++		size_t tokenlen = end ? (size_t)(end - p) : strlen(p);
++		while (tokenlen > 0 && p[tokenlen - 1] == ' ') tokenlen--;
++		if ((tokenlen == 1 && *p == '*') ||
++		    (tokenlen == namelen && strncmp(p, name, namelen) == 0)) {
++			return true;
++		}
++		if (!end) break;
++		p = end + 1;
++	}
++	return false;
 +}
 +
  kern_return_t
  is_io_service_open_extended(
  	io_object_t _service,
-@@ -4353,7 +4370,7 @@ is_io_service_open_extended(
+@@ -4353,7 +4396,7 @@ is_io_service_open_extended(
  	}
  
  #if CONFIG_MACF
@@ -35,18 +67,18 @@ index e7d6592..5d99754 100644
  		return kIOReturnNotPermitted;
  	}
  #endif
-@@ -4512,7 +4529,9 @@ is_io_service_open_extended(
+@@ -4531,7 +4574,9 @@ is_io_service_open_extended(
  				res = kIOReturnNotPrivileged;
  			}
  #if CONFIG_MACF
 -			else if (0 != mac_iokit_check_open(kauth_cred_get(), client, connect_type)) {
-+			/* The service's grant (native_sandbox_grant) stands in for the sandbox's verdict on the render server's open. */
++			/* The service's grant (native_sandbox_grant) stands in for the sandbox's verdict on permitted processes' open. */
 +			else if (!native_sandbox_grant(service)
 +			    && 0 != mac_iokit_check_open(kauth_cred_get(), client, connect_type)) {
  				IOLog("IOUC %s failed MACF in process %s\n",
  				    client->getMetaClass()->getClassName(), creatorNameCStr);
  				res = kIOReturnNotPermitted;
-@@ -4520,6 +4539,7 @@ is_io_service_open_extended(
+@@ -4539,6 +4584,7 @@ is_io_service_open_extended(
  #endif
  
  			if ((kIOReturnSuccess == res)

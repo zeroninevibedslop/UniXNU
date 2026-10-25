@@ -39,7 +39,7 @@ if [ ! -f "$EDK2/MdePkg/MdePkg.dec" ]; then
   exit 1
 fi
 
-if [ ! -f "$EDK2/MdePkg/Library/BaseFdtLib/libfdt/libfdt/fdt.c" ] || [ ! -d "$EDK2/MdePkg/Library/MipiSysTLib/mipisyst/library/include" ]; then
+if [ ! -f "$EDK2/MdePkg/Library/BaseFdtLib/libfdt/libfdt/fdt.c" ]; then
   echo "error: MdePkg submodules are missing; run in $EDK2:" >&2
   echo "  git submodule update --init --depth 1 MdePkg/Library/BaseFdtLib/libfdt MdePkg/Library/MipiSysTLib/mipisyst BaseTools/Source/C/BrotliCompress/brotli" >&2
   exit 1

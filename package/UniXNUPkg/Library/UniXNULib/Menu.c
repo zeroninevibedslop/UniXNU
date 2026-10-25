@@ -19,6 +19,12 @@
 #ifndef SCAN_SUSPEND
 #define SCAN_SUSPEND  0x0102
 #endif
+#ifndef SCAN_VOLUME_UP
+#define SCAN_VOLUME_UP    0x0080
+#endif
+#ifndef SCAN_VOLUME_DOWN
+#define SCAN_VOLUME_DOWN  0x0081
+#endif
 
 //
 // Physical input = a SimpleTextIn instance that sits on a device path; the
@@ -216,9 +222,9 @@ UniXNUMenuRun (
         Selected    = Config->DefaultIndex;
       }
 
-      if ((Key.ScanCode == SCAN_UP) || (Key.UnicodeChar == L'k')) {
+      if ((Key.ScanCode == SCAN_UP) || (Key.ScanCode == SCAN_VOLUME_UP) || (Key.UnicodeChar == L'k')) {
         Selected = (Selected + Count - 1) % Count;
-      } else if ((Key.ScanCode == SCAN_DOWN) || (Key.UnicodeChar == L'j')) {
+      } else if ((Key.ScanCode == SCAN_DOWN) || (Key.ScanCode == SCAN_VOLUME_DOWN) || (Key.UnicodeChar == L'j')) {
         Selected = (Selected + 1) % Count;
       } else if (Key.ScanCode == SCAN_HOME) {
         Selected = 0;
@@ -300,18 +306,18 @@ UniXNUMenuConfirm (
     }
 
     if (Items > 0) {
-      if (Key.ScanCode == SCAN_UP) {
+      if ((Key.ScanCode == SCAN_UP) || (Key.ScanCode == SCAN_VOLUME_UP)) {
         Shown = (Shown + Items - 1) % Items;
         continue;
       }
 
-      if (Key.ScanCode == SCAN_DOWN) {
+      if ((Key.ScanCode == SCAN_DOWN) || (Key.ScanCode == SCAN_VOLUME_DOWN)) {
         Shown = (Shown + 1) % Items;
         continue;
       }
     }
 
-    if ((Key.UnicodeChar == CHAR_CARRIAGE_RETURN) || (Key.UnicodeChar == CHAR_LINEFEED)) {
+    if ((Key.UnicodeChar == CHAR_CARRIAGE_RETURN) || (Key.UnicodeChar == CHAR_LINEFEED) || (Key.ScanCode == SCAN_SUSPEND)) {
       if (Items > 0) {
         if (Shown + 1 == Items) {
           return FALSE;
